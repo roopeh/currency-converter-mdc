@@ -10,11 +10,11 @@ import java.util.*
 class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 {
     private val latestCurrencies = "https://api.exchangeratesapi.io/latest"
-    private val LOCALDATETAG = "Date"
     private val DEBUGTAG = "MDC_PROJECT"
 
     // JSON fields
     private val TAG_DATE = "date"
+    private val TAG_RATES = "rates"
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -23,7 +23,8 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
         // API data is updated once every day so fetch new data only if the date has changed, to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val date = preferences.getString(LOCALDATETAG, "")
+        val date = preferences.getString(TAG_DATE, "")
+        val rates = preferences.getString(TAG_RATES, "")
         if (date != getDateAsString())
         {
             Log.d(DEBUGTAG, "Dates do not match, date: " + date + ", getDate: " + getDateAsString())
@@ -33,16 +34,27 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             currencyThread.start()
         }
         else
-            Log.d(DEBUGTAG, "They match!")
+        {
+            // should not ever be null here
+            assert(rates != null)
+            processRatesFromString(rates!!)
+        }
     }
 
-    private fun parseJSONData(json: JSONObject)
+    private fun processRatesFromString(rates: String)
     {
-        Log.d(DEBUGTAG, "JSON: " + json.toString())
+        Log.d(DEBUGTAG, "JSON: " + rates)
+    }
 
+    private fun saveToApplicationCache(json: JSONObject)
+    {
+        // Save date and rates to application's cache
         val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
-        editor.putString(LOCALDATETAG, json.getString(TAG_DATE))
+        editor.putString(TAG_DATE, json.getString(TAG_DATE))
+        editor.putString(TAG_RATES, json.getString(TAG_RATES))
         editor.apply()
+
+        processRatesFromString(json.getString(TAG_RATES))
     }
 
     private fun getDateAsString() : String
@@ -53,6 +65,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     override fun onRequestDone(data: JSONObject)
     {
-        parseJSONData(data)
+        saveToApplicationCache(data)
     }
 }
