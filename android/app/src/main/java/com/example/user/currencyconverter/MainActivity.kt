@@ -4,6 +4,8 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
@@ -25,6 +27,10 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Create toolbar menu
+        val toolbar = findViewById<android.support.v7.widget.Toolbar>(R.id.toolbarMenu)
+        setSupportActionBar(toolbar)
 
         // API data is updated once every day so fetch new data only if the date has changed, to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
@@ -77,8 +83,24 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         return ("" + calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH))
     }
 
-    override fun onRequestDone(data: JSONObject)
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean
     {
-        saveToApplicationCache(data)
+        menuInflater.inflate(R.menu.toolbar_menu, menu)
+        return true
     }
+
+    override fun onOptionsItemSelected(item: MenuItem) : Boolean
+    {
+        when (item.itemId)
+        {
+            R.id.action_change_base_currency ->
+            {
+                Log.d(TAG_DEBUG, "Clicked overflow menu")
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onRequestDone(data: JSONObject) { saveToApplicationCache(data) }
 }
