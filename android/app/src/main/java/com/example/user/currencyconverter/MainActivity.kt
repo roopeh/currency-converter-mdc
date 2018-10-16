@@ -4,17 +4,22 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
 import java.util.*
+import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 {
     private val latestCurrencies = "https://api.exchangeratesapi.io/latest"
-    private val DEBUGTAG = "MDC_PROJECT"
 
-    // JSON fields
+    private val TAG_DEBUG = "MDC_PROJECT"
+
     private val TAG_DATE = "date"
     private val TAG_RATES = "rates"
+
+    private var ratesList: HashMap<String, Double> = HashMap()
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -27,8 +32,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         val rates = preferences.getString(TAG_RATES, "")
         if (date != getDateAsString())
         {
-            Log.d(DEBUGTAG, "Dates do not match, date: " + date + ", getDate: " + getDateAsString())
-
             // Load latest currencies to cache in start up in background thread
             val currencyThread = BackgroundThread(latestCurrencies, this)
             currencyThread.start()
@@ -43,18 +46,29 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun processRatesFromString(rates: String)
     {
-        Log.d(DEBUGTAG, "JSON: " + rates)
+        val listType = object: TypeToken<HashMap<String, Double>>(){}.type
+        ratesList = Gson().fromJson<HashMap<String, Double>>(rates, listType)
+        Log.d(TAG_DEBUG, ratesList.toString())
     }
 
     private fun saveToApplicationCache(json: JSONObject)
     {
+        // Process rates from JSONObject to string with gson
+        val ratesJson = json.getJSONObject(TAG_RATES)
+        val tmpList: HashMap<String, Double> = HashMap()
+        for (i in 0 until ratesJson.names().length())
+        {
+            tmpList[ratesJson.names().getString(i)] = ratesJson.getDouble(ratesJson.names().getString(i))
+        }
+        val ratesString = Gson().toJson(tmpList)
+
         // Save date and rates to application's cache
         val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
         editor.putString(TAG_DATE, json.getString(TAG_DATE))
-        editor.putString(TAG_RATES, json.getString(TAG_RATES))
+        editor.putString(TAG_RATES, ratesString)
         editor.apply()
 
-        processRatesFromString(json.getString(TAG_RATES))
+        processRatesFromString(ratesString)
     }
 
     private fun getDateAsString() : String
