@@ -1,15 +1,18 @@
 package com.example.user.currencyconverter
 
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.NullPointerException
 import java.lang.StringBuilder
 import java.net.HttpURLConnection
 import java.net.URL
 
 class BackgroundThread(url: String, listener: ThreadNotifier) : Thread()
 {
-    interface ThreadNotifier { fun onRequestDone(data: String) }
+    interface ThreadNotifier { fun onRequestDone(data: JSONObject) }
 
     private var mUrl: String? = null
     private var mListener: ThreadNotifier? = null
@@ -37,8 +40,11 @@ class BackgroundThread(url: String, listener: ThreadNotifier) : Thread()
             currentLine = reader.readLine()
         }
 
-        // Return data in string format
-        mListener?.onRequestDone(results.toString())
+        // Return data as JSONObject
+        var jsonObject: JSONObject? = null
+        try { jsonObject = JSONObject(results.toString()) }
+        catch (e : JSONException) { e.printStackTrace() }
+        mListener?.onRequestDone(jsonObject!!)
 
         // Close connections
         input.close()
