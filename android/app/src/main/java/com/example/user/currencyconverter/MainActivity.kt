@@ -120,14 +120,13 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun populateSpinners()
     {
+        // Add each value in rates list to ArrayList
         val countryList = ArrayList<String>()
         for ((key, _) in ratesList) { countryList.add(key) }
+
+        // Default currency is euro
         if (currencyFrom.isNullOrEmpty() || currencyFrom!!.contains("null"))
-        // Default is euro
             currencyFrom = "EUR"
-        // For some reason API does not add euro to the list if the selected currency is euro
-        if (currencyFrom == "EUR")
-            countryList.add(currencyFrom as String)
 
         // Set adapters to spinners
         val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
@@ -205,6 +204,13 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         {
             tmpList[ratesJson.names().getString(i)] = ratesJson.getDouble(ratesJson.names().getString(i))
         }
+
+        // For some reason API does not add euro to the list if the selected currency is euro
+        // looks like it works fine for other currencies
+        if (!currencyFrom.isNullOrEmpty() && currencyFrom!!.contains("EUR"))
+            tmpList[currencyFrom as String] = 1.0
+
+        // Convert to JSON string so it can be accessed again on app restart
         val ratesString = Gson().toJson(tmpList)
 
         // Save date and rates to application's cache
