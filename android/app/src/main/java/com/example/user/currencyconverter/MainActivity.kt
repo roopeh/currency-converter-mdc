@@ -6,10 +6,16 @@ import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.ImageView
+import android.widget.Spinner
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
@@ -21,7 +27,14 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     private val TAG_DATE = "date"
     private val TAG_RATES = "rates"
 
+    // Hash map for exchange rates
     private var ratesList: HashMap<String, Double> = HashMap()
+
+    // UI
+    private var selectedSpinner: Spinner? = null
+    private var convertSpinner: Spinner? = null
+
+    private var selectedImage: ImageView? = null
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -32,7 +45,12 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         val toolbar = findViewById<android.support.v7.widget.Toolbar>(R.id.toolbarMenu)
         setSupportActionBar(toolbar)
 
-        // API data is updated once every day so fetch new data only if the date has changed, to save bandwidth
+        // Load UI widgets
+        selectedSpinner = findViewById(R.id.spinnerSelectedCurrency)
+        convertSpinner = findViewById(R.id.spinnerConvertedCurrency)
+        selectedImage = findViewById(R.id.imageSelectedCurrency)
+
+        // API data is updated once every day so fetch new data only if the date has changed to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val date = preferences.getString(TAG_DATE, "")
         val rates = preferences.getString(TAG_RATES, "")
@@ -55,6 +73,35 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         val listType = object: TypeToken<HashMap<String, Double>>(){}.type
         ratesList = Gson().fromJson<HashMap<String, Double>>(rates, listType)
         Log.d(TAG_DEBUG, ratesList.toString())
+
+        // Populate spinners with data
+        populateSpinners()
+    }
+
+    private fun populateSpinners()
+    {
+        val countryList = ArrayList<String>()
+        for ((key, _) in ratesList)
+        {
+            //countryList.add(getCountryName(applicationContext, key))
+            countryList.add(key)
+        }
+        selectedSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+        convertSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+
+        selectedSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
+        {
+            override fun onNothingSelected(parent: AdapterView<*>?) { }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
+            {
+                val string = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
+                val testid = resources.getIdentifier(string, "drawable", packageName)
+                // if id == 0 -> choose default
+                Log.d(TAG_DEBUG, "Test string: " + string + ", id: " + testid)
+                selectedImage?.setImageResource(testid)
+            }
+        }
     }
 
     private fun saveToApplicationCache(json: JSONObject)
