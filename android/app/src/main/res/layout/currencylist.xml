@@ -48,7 +48,4 @@
             android:gravity="bottom|end"
             android:text="" />
     </LinearLayout>
-
-
-
 </LinearLayout>
