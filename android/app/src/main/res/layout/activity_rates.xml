@@ -6,12 +6,18 @@
     android:orientation="vertical"
     tools:context=".RatesActivity">
 
+    <Button
+        android:id="@+id/buttonReturn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/textReturn" />
+
     <TextView
         android:id="@+id/textCurrentCurrency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:paddingTop="50dp"
+        android:paddingTop="30dp"
         android:textColor="@android:color/black"
         android:text="" />
 
