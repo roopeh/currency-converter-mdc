@@ -24,6 +24,8 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private val TAG_DATE = "date"
     private val TAG_RATES = "rates"
+    private val TAG_CURRENCY_FROM = "currencyFrom"
+    private val TAG_CURRENCY_TO = "currencyTo"
 
     // Hash map for exchange rates
     private var ratesList: HashMap<String, Double> = HashMap()
@@ -75,6 +77,21 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         buttonConvert?.setOnClickListener { convertAmount() }
     }
 
+    override fun onPause()
+    {
+        super.onPause()
+
+        // Save current currencies and rates to application cache
+        val ratesString = Gson().toJson(ratesList)
+        val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
+        editor.putString(TAG_RATES, ratesString)
+        editor.putString(TAG_CURRENCY_FROM, selectedSpinner?.selectedItem.toString())
+        editor.putString(TAG_CURRENCY_TO, convertSpinner?.selectedItem.toString())
+        editor.apply()
+
+        Log.d(TAG_DEBUG, "Test: " + PreferenceManager.getDefaultSharedPreferences(this).getString(TAG_CURRENCY_TO, ""))
+    }
+
     private fun processRatesFromString(rates: String)
     {
         val listType = object: TypeToken<HashMap<String, Double>>(){}.type
@@ -96,15 +113,22 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         }
         var arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryListTo)
         convertSpinner?.adapter = arrayAdapter
+        // Set user's previous selection to selected item
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val currencyTo = preferences.getString(TAG_CURRENCY_TO, "")
+        if (!currencyTo!!.isEmpty())
+            convertSpinner?.setSelection(arrayAdapter.getPosition(currencyTo))
 
-        // Add user's previous selection to selectable list
-        // API won't list previous selection so we have to manually add it
-        // todo: do this properly
-        countryListFrom.add("EUR")
         arrayAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, countryListFrom)
         selectedSpinner?.adapter = arrayAdapter
-        val position = arrayAdapter.getPosition("EUR")
-        selectedSpinner?.setSelection(position)
+        // Add user's previous selection to selectable list
+        // API won't list current selection so we have to manually add it
+        var currencyFrom = preferences.getString(TAG_CURRENCY_FROM, "")
+        // Default is euro
+        if (currencyFrom!!.isEmpty())
+            currencyFrom = "EUR"
+        countryListFrom.add(currencyFrom)
+        selectedSpinner?.setSelection(arrayAdapter.getPosition(currencyFrom))
 
         // Set listeners
         convertSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
@@ -116,8 +140,15 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                 // Change flag icon to selected currency
                 val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
                 val imageId = resources.getIdentifier(flagName, "drawable", packageName)
-                // todo: if id == 0 -> choose default
-                convertedImage?.setImageResource(imageId)
+                if (imageId != 0)
+                    convertedImage?.setImageResource(imageId)
+                else
+                {
+                    // should not happen
+                    convertedImage?.setImageResource(android.R.drawable.stat_notify_error)
+                    Toast.makeText(applicationContext, "Error in finding flag $flagName", Toast.LENGTH_LONG).show()
+                    Log.d(TAG_DEBUG, "Error in finding flag: Currency: " + parent?.getItemAtPosition(position) + ", flag name: " + flagName)
+                }
             }
         }
         selectedSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
@@ -127,11 +158,17 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
             {
                 // Change flag icon to selected currency
-                val string = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
-                val testid = resources.getIdentifier(string, "drawable", packageName)
-                // todo: if id == 0 -> choose default
-                Log.d(TAG_DEBUG, "Test string: " + string + ", id: " + testid)
-                selectedImage?.setImageResource(testid)
+                val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
+                val imageId = resources.getIdentifier(flagName, "drawable", packageName)
+                if (imageId != 0)
+                    selectedImage?.setImageResource(imageId)
+                else
+                {
+                    // should not happen
+                    selectedImage?.setImageResource(android.R.drawable.stat_notify_error)
+                    Toast.makeText(applicationContext, "Error in finding flag $flagName", Toast.LENGTH_LONG).show()
+                    Log.d(TAG_DEBUG, "Error in finding flag: Currency: " + parent?.getItemAtPosition(position) + ", flag name: " + flagName)
+                }
             }
         }
     }
