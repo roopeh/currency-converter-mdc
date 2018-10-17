@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     private var convertSpinner: Spinner? = null
 
     private var selectedImage: ImageView? = null
+    private var convertedImage: ImageView? = null
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         selectedSpinner = findViewById(R.id.spinnerSelectedCurrency)
         convertSpinner = findViewById(R.id.spinnerConvertedCurrency)
         selectedImage = findViewById(R.id.imageSelectedCurrency)
+        convertedImage = findViewById(R.id.imageConvertCurrency)
 
         // API data is updated once every day so fetch new data only if the date has changed to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
@@ -86,13 +88,31 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             //countryList.add(getCountryName(applicationContext, key))
             countryList.add(key)
         }
-        convertSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+        val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+        convertSpinner?.adapter = arrayAdapter
 
-        // Add user's saved selection to selectable list
-        // todo: missing default selection
+        // Add user's previous selection to selectable list
+        // API won't list previous selection so we have to manually add it
+        // todo: do this properly
         countryList.add("EUR")
-        selectedSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+        selectedSpinner?.adapter = arrayAdapter
+        val position = arrayAdapter.getPosition("EUR")
+        selectedSpinner?.setSelection(position)
 
+        // Set listeners
+        convertSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
+        {
+            override fun onNothingSelected(parent: AdapterView<*>?) { }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
+            {
+                // Change flag icon to selected currency
+                val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
+                val imageId = resources.getIdentifier(flagName, "drawable", packageName)
+                // todo: if id == 0 -> choose default
+                convertedImage?.setImageResource(imageId)
+            }
+        }
 
         selectedSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
         {
@@ -100,9 +120,10 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
             {
+                // Change flag icon to selected currency
                 val string = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
                 val testid = resources.getIdentifier(string, "drawable", packageName)
-                // if id == 0 -> choose default
+                // todo: if id == 0 -> choose default
                 Log.d(TAG_DEBUG, "Test string: " + string + ", id: " + testid)
                 selectedImage?.setImageResource(testid)
             }
