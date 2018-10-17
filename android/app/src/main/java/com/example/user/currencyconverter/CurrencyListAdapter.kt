@@ -67,7 +67,6 @@ class CurrencyListAdapter(private val context: Context, private val data: ArrayL
     {
         return data.size
     }
-
 }
 
 class CurrencyData(var imageId: Int, var currencyText: String, var currencyTextDetailed: String, var currencyTextAmount: String)
