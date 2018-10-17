@@ -3,6 +3,8 @@ package com.example.user.currencyconverter
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -42,8 +44,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     private var selectedCurrency: EditText? = null
     private var convertedCurrency: TextView? = null
 
-    private var buttonConvert: ImageButton? = null
-
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -56,7 +56,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         convertedImage = findViewById(R.id.imageConvertCurrency)
         selectedCurrency = findViewById(R.id.textCurrencyAmount)
         convertedCurrency = findViewById(R.id.textConvertedAmount)
-        buttonConvert = findViewById(R.id.buttonConvert)
 
         // API data is updated once every day so fetch new data only if the date has changed to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
@@ -81,8 +80,9 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun loadCurrencyJson(currency: String)
     {
-        // Disable buttons to avoid possible crash during API load
-        buttonConvert?.isClickable = false
+        // Disable button and text field to avoid possible crash during API load
+        //buttonConvert?.isClickable = false
+        selectedCurrency?.isEnabled = false
 
         // Start background thread
         Log.d(TAG_DEBUG, "loadCurrencyJson: $currency")
@@ -115,7 +115,17 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         populateSpinners()
 
         // Set listeners to buttons here instead of onCreate to avoid possible crashes (wait for API first)
-        buttonConvert?.setOnClickListener { convertAmount() }
+        selectedCurrency?.isEnabled = true
+        selectedCurrency?.addTextChangedListener(object: TextWatcher
+        {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { convertAmount() }
+
+            // Empty
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+
+            // Empty
+            override fun afterTextChanged(s: Editable?) { }
+        })
     }
 
     private fun populateSpinners()
@@ -206,7 +216,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         }
 
         // For some reason API does not add euro to the list if the selected currency is euro
-        // looks like it works fine for other currencies
+        // looks like its working fine for other currencies
         if (!currencyFrom.isNullOrEmpty() && currencyFrom!!.contains("EUR"))
             tmpList[currencyFrom as String] = 1.0
 
@@ -224,6 +234,13 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun convertAmount()
     {
+        // If value is null, do not proceed
+        if (selectedCurrency?.text.isNullOrEmpty())
+        {
+            convertedCurrency?.text = (0.00).toString()
+            return
+        }
+
         val convertToCurrency = convertSpinner?.selectedItem as String
         val rate = ratesList[convertToCurrency]!!
 
