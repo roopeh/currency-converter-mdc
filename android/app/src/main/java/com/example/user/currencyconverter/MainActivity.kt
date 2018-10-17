@@ -7,10 +7,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.ImageView
-import android.widget.Spinner
+import android.widget.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
@@ -37,6 +34,11 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     private var selectedImage: ImageView? = null
     private var convertedImage: ImageView? = null
 
+    private var selectedCurrency: EditText? = null
+    private var convertedCurrency: TextView? = null
+
+    private var buttonConvert: ImageButton? = null
+
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -51,6 +53,9 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         convertSpinner = findViewById(R.id.spinnerConvertedCurrency)
         selectedImage = findViewById(R.id.imageSelectedCurrency)
         convertedImage = findViewById(R.id.imageConvertCurrency)
+        selectedCurrency = findViewById(R.id.textCurrencyAmount)
+        convertedCurrency = findViewById(R.id.textConvertedAmount)
+        buttonConvert = findViewById(R.id.buttonConvert)
 
         // API data is updated once every day so fetch new data only if the date has changed to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
@@ -68,6 +73,9 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             assert(rates != null)
             processRatesFromString(rates!!)
         }
+
+        // Set button listeners
+        buttonConvert?.setOnClickListener { convertAmount() }
     }
 
     private fun processRatesFromString(rates: String)
@@ -82,19 +90,21 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun populateSpinners()
     {
-        val countryList = ArrayList<String>()
+        val countryListFrom = ArrayList<String>()
+        val countryListTo = ArrayList<String>()
         for ((key, _) in ratesList)
         {
-            //countryList.add(getCountryName(applicationContext, key))
-            countryList.add(key)
+            countryListFrom.add(key)
+            countryListTo.add(key)
         }
-        val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+        var arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryListTo)
         convertSpinner?.adapter = arrayAdapter
 
         // Add user's previous selection to selectable list
         // API won't list previous selection so we have to manually add it
         // todo: do this properly
-        countryList.add("EUR")
+        countryListFrom.add("EUR")
+        arrayAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, countryListFrom)
         selectedSpinner?.adapter = arrayAdapter
         val position = arrayAdapter.getPosition("EUR")
         selectedSpinner?.setSelection(position)
@@ -113,7 +123,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                 convertedImage?.setImageResource(imageId)
             }
         }
-
         selectedSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
         {
             override fun onNothingSelected(parent: AdapterView<*>?) { }
@@ -148,6 +157,14 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         editor.apply()
 
         processRatesFromString(ratesString)
+    }
+
+    private fun convertAmount()
+    {
+        val selectedCurrency = selectedSpinner?.selectedItem as String
+        val convertCurrency = convertSpinner?.selectedItem as String
+        val rate = ratesList[convertCurrency]
+        Log.d(TAG_DEBUG, "Sel: " + selectedCurrency + ", to: " + convertCurrency + ", rate: " + rate)
     }
 
     private fun getDateAsString() : String

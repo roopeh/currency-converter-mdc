@@ -51,10 +51,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end|bottom"
+                android:gravity="end"
                 android:ems="5"
-                android:inputType="numberDecimal" />
+                android:inputType="numberDecimal"
+                android:text="0"/>
         </LinearLayout>
-
     </LinearLayout>
     <!-- Currency to convert to -->
     <LinearLayout
@@ -86,11 +87,14 @@
 
             <TextView
                 android:id="@+id/textConvertedAmount"
-                android:paddingTop="15dip"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_gravity="end|bottom"
-                android:text="TextView" />
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:textSize="20sp"
+                android:textColor="#008000"
+                android:text="" />
         </LinearLayout>
     </LinearLayout>
 
