@@ -4,8 +4,6 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import com.google.gson.Gson
@@ -72,9 +70,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             assert(rates != null)
             processRatesFromString(rates!!)
         }
-
-        // Set button listeners
-        buttonConvert?.setOnClickListener { convertAmount() }
     }
 
     override fun onPause()
@@ -88,8 +83,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         editor.putString(TAG_CURRENCY_FROM, selectedSpinner?.selectedItem.toString())
         editor.putString(TAG_CURRENCY_TO, convertSpinner?.selectedItem.toString())
         editor.apply()
-
-        Log.d(TAG_DEBUG, "Test: " + PreferenceManager.getDefaultSharedPreferences(this).getString(TAG_CURRENCY_TO, ""))
     }
 
     private fun processRatesFromString(rates: String)
@@ -100,6 +93,9 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
         // Populate spinners with data
         populateSpinners()
+
+        // Set listeners to buttons here instead of onCreate to avoid possible crashes (wait for API first)
+        buttonConvert?.setOnClickListener { convertAmount() }
     }
 
     private fun populateSpinners()
