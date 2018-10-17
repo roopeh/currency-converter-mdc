@@ -16,7 +16,7 @@ import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 {
-    private val latestCurrencies = "https://api.exchangeratesapi.io/latest"
+    private val latestCurrencies = "https://api.exchangeratesapi.io/latest?base="
 
     private val TAG_DEBUG = "MDC_PROJECT"
 
@@ -27,6 +27,10 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     // Hash map for exchange rates
     private var ratesList: HashMap<String, Double> = HashMap()
+
+    // Selected currencies
+    private var currencyFrom: String? = null
+    private var currencyTo: String? = null
 
     // UI
     private var selectedSpinner: Spinner? = null
@@ -56,13 +60,16 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
         // API data is updated once every day so fetch new data only if the date has changed to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val date = preferences.getString(TAG_DATE, "")
-        val rates = preferences.getString(TAG_RATES, "")
+        val date = preferences.getString(TAG_DATE, null)
+        val rates = preferences.getString(TAG_RATES, null)
+        currencyFrom = preferences.getString(TAG_CURRENCY_FROM, null)
+        currencyTo = preferences.getString(TAG_CURRENCY_TO, null)
         if (date != getDateAsString())
         {
             // Load latest currencies to cache in start up in background thread
-            val currencyThread = BackgroundThread(latestCurrencies, this)
-            currencyThread.start()
+            if (currencyFrom.isNullOrEmpty() || currencyFrom!!.contains("null"))
+                currencyFrom = "EUR"
+            loadCurrencyJson(currencyFrom as String)
         }
         else
         {
@@ -70,6 +77,17 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             assert(rates != null)
             processRatesFromString(rates!!)
         }
+    }
+
+    private fun loadCurrencyJson(currency: String)
+    {
+        // Disable buttons to avoid possible crash during API load
+        buttonConvert?.isClickable = false
+
+        // Start background thread
+        Log.d(TAG_DEBUG, "loadCurrencyJson: $currency")
+        val currencyThread = BackgroundThread(latestCurrencies + currency, this)
+        currencyThread.start()
     }
 
     override fun onPause()
@@ -80,9 +98,11 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         val ratesString = Gson().toJson(ratesList)
         val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
         editor.putString(TAG_RATES, ratesString)
-        editor.putString(TAG_CURRENCY_FROM, selectedSpinner?.selectedItem.toString())
-        editor.putString(TAG_CURRENCY_TO, convertSpinner?.selectedItem.toString())
+        editor.putString(TAG_CURRENCY_FROM, currencyFrom)
+        editor.putString(TAG_CURRENCY_TO, currencyTo)
         editor.apply()
+
+        Log.d(TAG_DEBUG, "Test")
     }
 
     private fun processRatesFromString(rates: String)
@@ -100,35 +120,29 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun populateSpinners()
     {
-        val countryListFrom = ArrayList<String>()
-        val countryListTo = ArrayList<String>()
-        for ((key, _) in ratesList)
-        {
-            countryListFrom.add(key)
-            countryListTo.add(key)
-        }
-        var arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryListTo)
-        convertSpinner?.adapter = arrayAdapter
-        // Set user's previous selection to selected item
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val currencyTo = preferences.getString(TAG_CURRENCY_TO, "")
-        if (!currencyTo!!.isEmpty())
-            convertSpinner?.setSelection(arrayAdapter.getPosition(currencyTo))
-
-        arrayAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, countryListFrom)
-        selectedSpinner?.adapter = arrayAdapter
-        // Add user's previous selection to selectable list
-        // API won't list current selection so we have to manually add it
-        var currencyFrom = preferences.getString(TAG_CURRENCY_FROM, "")
+        val countryList = ArrayList<String>()
+        for ((key, _) in ratesList) { countryList.add(key) }
+        if (currencyFrom.isNullOrEmpty() || currencyFrom!!.contains("null"))
         // Default is euro
-        if (currencyFrom!!.isEmpty())
             currencyFrom = "EUR"
-        countryListFrom.add(currencyFrom)
+        // For some reason API does not add euro to the list if the selected currency is euro
+        if (currencyFrom == "EUR")
+            countryList.add(currencyFrom as String)
+
+        // Set adapters to spinners
+        val arrayAdapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+        selectedSpinner?.adapter = arrayAdapter
+        convertSpinner?.adapter = arrayAdapter
+        // Set user's chosen currency as selected item
         selectedSpinner?.setSelection(arrayAdapter.getPosition(currencyFrom))
+        // Set user's previous selection as selected item, else use first item in list
+        if (!currencyTo.isNullOrEmpty() && !currencyTo!!.contains("null"))
+            convertSpinner?.setSelection(arrayAdapter.getPosition(currencyTo))
 
         // Set listeners
         convertSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
         {
+            // Empty
             override fun onNothingSelected(parent: AdapterView<*>?) { }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
@@ -137,18 +151,22 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                 val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
                 val imageId = resources.getIdentifier(flagName, "drawable", packageName)
                 if (imageId != 0)
+                {
+                    currencyTo = parent?.getItemAtPosition(position).toString()
                     convertedImage?.setImageResource(imageId)
+                }
                 else
                 {
                     // should not happen
                     convertedImage?.setImageResource(android.R.drawable.stat_notify_error)
                     Toast.makeText(applicationContext, "Error in finding flag $flagName", Toast.LENGTH_LONG).show()
-                    Log.d(TAG_DEBUG, "Error in finding flag: Currency: " + parent?.getItemAtPosition(position) + ", flag name: " + flagName)
+                    Log.d(TAG_DEBUG, "Error in finding converted currency flag: Currency: " + parent?.getItemAtPosition(position) + ", flag name: " + flagName)
                 }
             }
         }
         selectedSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
         {
+            // Empty
             override fun onNothingSelected(parent: AdapterView<*>?) { }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
@@ -157,13 +175,22 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                 val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
                 val imageId = resources.getIdentifier(flagName, "drawable", packageName)
                 if (imageId != 0)
+                {
                     selectedImage?.setImageResource(imageId)
+
+                    // Avoid infinite loop here
+                    if (currencyFrom != parent?.getItemAtPosition(position))
+                    {
+                        currencyFrom = parent?.getItemAtPosition(position).toString()
+                        loadCurrencyJson(parent?.getItemAtPosition(position).toString())
+                    }
+                }
                 else
                 {
                     // should not happen
                     selectedImage?.setImageResource(android.R.drawable.stat_notify_error)
                     Toast.makeText(applicationContext, "Error in finding flag $flagName", Toast.LENGTH_LONG).show()
-                    Log.d(TAG_DEBUG, "Error in finding flag: Currency: " + parent?.getItemAtPosition(position) + ", flag name: " + flagName)
+                    Log.d(TAG_DEBUG, "Error in finding selected currency flag: Currency: " + parent?.getItemAtPosition(position) + ", flag name: " + flagName)
                 }
             }
         }
