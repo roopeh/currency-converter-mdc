@@ -11,6 +11,7 @@ import android.widget.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.json.JSONObject
+import java.text.DecimalFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -43,10 +44,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // Create toolbar menu
-        val toolbar = findViewById<android.support.v7.widget.Toolbar>(R.id.toolbarMenu)
-        setSupportActionBar(toolbar)
 
         // Load UI widgets
         selectedSpinner = findViewById(R.id.spinnerSelectedCurrency)
@@ -161,35 +158,22 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private fun convertAmount()
     {
-        val selectedCurrency = selectedSpinner?.selectedItem as String
-        val convertCurrency = convertSpinner?.selectedItem as String
-        val rate = ratesList[convertCurrency]
-        Log.d(TAG_DEBUG, "Sel: " + selectedCurrency + ", to: " + convertCurrency + ", rate: " + rate)
+        val convertToCurrency = convertSpinner?.selectedItem as String
+        val rate = ratesList[convertToCurrency]!!
+
+        // Get amount to be converted
+        val convertAmount = (selectedCurrency?.text.toString()).toDouble()
+        // Calculate
+        val finalAmount = convertAmount * rate
+        // Put amount in text view
+        val decimalFormat = DecimalFormat("0.00")
+        convertedCurrency?.text = decimalFormat.format(finalAmount).toString()
     }
 
     private fun getDateAsString() : String
     {
         val calendar = Calendar.getInstance(TimeZone.getDefault())
         return ("" + calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH))
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean
-    {
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem) : Boolean
-    {
-        when (item.itemId)
-        {
-            R.id.action_change_base_currency ->
-            {
-                Log.d(TAG_DEBUG, "Clicked overflow menu")
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     override fun onRequestDone(data: JSONObject) { runOnUiThread { saveToApplicationCache(data) } }
