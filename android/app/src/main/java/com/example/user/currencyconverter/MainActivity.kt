@@ -1,5 +1,6 @@
 package com.example.user.currencyconverter
 
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     private var selectedCurrency: EditText? = null
     private var convertedCurrency: TextView? = null
 
+    private var buttonRates: Button? = null
+
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
@@ -58,6 +61,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         switchCurrency = findViewById(R.id.imageSwitchValues)
         selectedCurrency = findViewById(R.id.textCurrencyAmount)
         convertedCurrency = findViewById(R.id.textConvertedAmount)
+        buttonRates = findViewById(R.id.buttonShowRates)
 
         // API data is updated once every day so fetch new data only if the date has changed to save bandwidth
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
@@ -116,7 +120,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         // Populate spinners with data
         populateSpinners()
 
-        // Set listeners to buttons here instead of onCreate to avoid possible crashes (wait for API first)
+        // Set listeners to views here instead of onCreate to avoid possible crashes (wait for API first)
         selectedCurrency?.isEnabled = true
         selectedCurrency?.addTextChangedListener(object: TextWatcher
         {
@@ -135,6 +139,15 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             currencyFrom = currencyTo
             currencyTo = tmpCurrencyFrom
             loadCurrencyJson(currencyFrom as String)
+        }
+
+        // Exchange rates
+        buttonRates?.setOnClickListener {
+            val intent = Intent(baseContext, RatesActivity::class.java)
+            val ratesString = Gson().toJson(ratesList)
+            intent.putExtra(TAG_CURRENCY_FROM, currencyFrom)
+            intent.putExtra(TAG_RATES, ratesString)
+            startActivity(intent)
         }
     }
 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/listIcon"
+        android:layout_width="64dip"
+        android:layout_height="64dip" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/listTextCurrency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LOREM IPSUM"/>
+
+            <TextView
+                android:id="@+id/listTextCurrencyDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="IPSUM LOREM"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/listTextValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_gravity="bottom"
+            android:gravity="end"
+            android:text="lul" />
+    </LinearLayout>
+
+
+
+</LinearLayout>
