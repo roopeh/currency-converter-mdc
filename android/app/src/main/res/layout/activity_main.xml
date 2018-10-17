@@ -43,7 +43,7 @@
                 android:gravity="center"
                 android:ems="5"
                 android:inputType="numberDecimal"
-                android:hint="0" />
+                android:hint="@string/hintAmount" />
         </LinearLayout>
     </LinearLayout>
 
@@ -113,6 +113,6 @@
             android:layout_weight="1"
             android:layout_gravity="bottom"
             android:clickable="false"
-            android:text="Button" />
+            android:text="@string/textRates" />
     </LinearLayout>
 </LinearLayout>

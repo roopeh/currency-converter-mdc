@@ -91,7 +91,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         selectedCurrency?.isEnabled = false
 
         // Start background thread
-        Log.d(TAG_DEBUG, "loadCurrencyJson: $currency")
         val currencyThread = BackgroundThread(latestCurrencies + currency, this)
         currencyThread.start()
     }
@@ -107,8 +106,6 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         editor.putString(TAG_CURRENCY_FROM, currencyFrom)
         editor.putString(TAG_CURRENCY_TO, currencyTo)
         editor.apply()
-
-        Log.d(TAG_DEBUG, "Test")
     }
 
     private fun processRatesFromString(rates: String)

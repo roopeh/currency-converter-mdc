@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">CurrencyConverter</string>
     <string name="textReturn">Return</string>
+    <string name="textValue">1 %1$s =</string>
+    <string name="hintAmount">0</string>
+    <string name="textRates">Show Exchange Rates</string>
 
     <!-- Countries -->
     <string name="BGN">Bulgarian Lev</string>

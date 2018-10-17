@@ -4,7 +4,6 @@ import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
@@ -34,7 +33,7 @@ class RatesActivity : AppCompatActivity()
 
         // Set text
         val textCurrency = findViewById<TextView>(R.id.textCurrentCurrency)
-        textCurrency.text = "1 $currency ="
+        textCurrency.text = getString(R.string.textValue, currency)
 
         // Set return button
         val buttonReturn = findViewById<Button>(R.id.buttonReturn)
