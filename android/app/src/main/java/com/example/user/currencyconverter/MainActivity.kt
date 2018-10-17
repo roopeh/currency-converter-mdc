@@ -86,8 +86,13 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             //countryList.add(getCountryName(applicationContext, key))
             countryList.add(key)
         }
-        selectedSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
         convertSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+
+        // Add user's saved selection to selectable list
+        // todo: missing default selection
+        countryList.add("EUR")
+        selectedSpinner?.adapter = ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, countryList)
+
 
         selectedSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener
         {
@@ -149,5 +154,5 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onRequestDone(data: JSONObject) { saveToApplicationCache(data) }
+    override fun onRequestDone(data: JSONObject) { runOnUiThread { saveToApplicationCache(data) } }
 }
