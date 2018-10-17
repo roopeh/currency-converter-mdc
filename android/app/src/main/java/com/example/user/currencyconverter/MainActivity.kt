@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
 
     private var selectedImage: ImageView? = null
     private var convertedImage: ImageView? = null
+    private var switchCurrency: ImageView? = null
 
     private var selectedCurrency: EditText? = null
     private var convertedCurrency: TextView? = null
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
         convertSpinner = findViewById(R.id.spinnerConvertedCurrency)
         selectedImage = findViewById(R.id.imageSelectedCurrency)
         convertedImage = findViewById(R.id.imageConvertCurrency)
+        switchCurrency = findViewById(R.id.imageSwitchValues)
         selectedCurrency = findViewById(R.id.textCurrencyAmount)
         convertedCurrency = findViewById(R.id.textConvertedAmount)
 
@@ -126,6 +128,14 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             // Empty
             override fun afterTextChanged(s: Editable?) { }
         })
+
+        // Switches currencies
+        switchCurrency?.setOnClickListener {
+            val tmpCurrencyFrom = currencyFrom
+            currencyFrom = currencyTo
+            currencyTo = tmpCurrencyFrom
+            loadCurrencyJson(currencyFrom as String)
+        }
     }
 
     private fun populateSpinners()
@@ -163,6 +173,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                 {
                     currencyTo = parent?.getItemAtPosition(position).toString()
                     convertedImage?.setImageResource(imageId)
+                    convertAmount()
                 }
                 else
                 {
@@ -191,7 +202,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                     if (currencyFrom != parent?.getItemAtPosition(position))
                     {
                         currencyFrom = parent?.getItemAtPosition(position).toString()
-                        loadCurrencyJson(parent?.getItemAtPosition(position).toString())
+                        loadCurrencyJson(currencyFrom as String)
                     }
                 }
                 else
@@ -203,6 +214,9 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
                 }
             }
         }
+
+        // Finally convert amount, if any is given
+        convertAmount()
     }
 
     private fun saveToApplicationCache(json: JSONObject)
