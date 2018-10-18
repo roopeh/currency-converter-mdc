@@ -1,0 +1,3 @@
+As a user, I want to switch base currency from a predefined list
+As a user, I need to see currency rates
+As a user, I want my previous currencies to be saved

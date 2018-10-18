@@ -27,8 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="30dip"
-            android:paddingEnd="30dip"
-            />
+            android:paddingEnd="30dip" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -79,8 +78,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="30dip"
-            android:paddingEnd="30dip"
-            />
+            android:paddingEnd="30dip" />
 
         <LinearLayout
             android:layout_width="0dp"
