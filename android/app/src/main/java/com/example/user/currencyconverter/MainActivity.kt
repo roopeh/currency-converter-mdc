@@ -1,9 +1,9 @@
 package com.example.user.currencyconverter
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -177,7 +177,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
             {
                 // Change flag icon to selected currency
-                val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
+                val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase(Locale.getDefault())
                 val imageId = resources.getIdentifier(flagName, "drawable", packageName)
                 if (imageId != 0)
                 {
@@ -202,7 +202,7 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long)
             {
                 // Change flag icon to selected currency
-                val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase()
+                val flagName = ("flag_" + parent?.getItemAtPosition(position)).toLowerCase(Locale.getDefault())
                 val imageId = resources.getIdentifier(flagName, "drawable", packageName)
                 if (imageId != 0)
                 {
@@ -233,10 +233,13 @@ class MainActivity : AppCompatActivity(), BackgroundThread.ThreadNotifier
     {
         // Process rates from JSONObject to string with gson
         val ratesJson = json.getJSONObject(TAG_RATES)
+        if (ratesJson.names() == null)
+            return
+
         val tmpList: HashMap<String, Double> = HashMap()
-        for (i in 0 until ratesJson.names().length())
+        for (i in 0 until ratesJson.names()!!.length())
         {
-            tmpList[ratesJson.names().getString(i)] = ratesJson.getDouble(ratesJson.names().getString(i))
+            tmpList[ratesJson.names()!!.getString(i)] = ratesJson.getDouble(ratesJson.names()!!.getString(i))
         }
 
         // For some reason API does not add euro to the list if the selected currency is euro

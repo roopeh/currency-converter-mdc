@@ -1,7 +1,7 @@
 package com.example.user.currencyconverter
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -10,6 +10,9 @@ import android.widget.TextView
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 class RatesActivity : AppCompatActivity()
 {
@@ -46,16 +49,15 @@ class RatesActivity : AppCompatActivity()
         populateListview(ratesString)
     }
 
-    private fun populateListview(data: String)
+    private fun populateListview(data: String?)
     {
         val listType = object: TypeToken<HashMap<String, Double>>(){}.type
         val ratesList = Gson().fromJson<HashMap<String, Double>>(data, listType)
-        Log.d(TAG_DEBUG, "Data: " + ratesList.toString())
+        Log.d(TAG_DEBUG, "Data: $ratesList")
 
         val arrayList = ArrayList<CurrencyData>()
-        for ((currency, value) in ratesList)
-        {
-            val flagName = ("flag_$currency").toLowerCase()
+        for ((currency, value) in ratesList) {
+            val flagName = ("flag_$currency").toLowerCase(Locale.ROOT)
             var imageId = resources.getIdentifier(flagName, "drawable", packageName)
             if (imageId == 0) imageId = android.R.drawable.ic_delete
 
@@ -73,7 +75,7 @@ class RatesActivity : AppCompatActivity()
 
     private fun getDetailedName(currency: String): String
     {
-        when(currency)
+        when (currency)
         {
             "BGN" -> return getString(R.string.BGN)
             "CAD" -> return getString(R.string.CAD)
